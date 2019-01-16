@@ -37,7 +37,7 @@ export const hReduce = (
   h: object,
   func: reduceCallback,
   initialValue: any
-): object => {
+): any => {
   let accumulator = initialValue
   hEach(h, (item, key, hash) => {
     accumulator = func(accumulator, item, key, hash)
