@@ -1,11 +1,45 @@
-interface callback {
-  (item: any, key?: string, hash?: object): any
+interface EachCallback<T extends Hash<any>> {
+  (value: T[Extract<keyof T, string>], key: Extract<keyof T, string>, hash: T):
+    | false
+    | void
 }
-interface reduceCallback {
-  (accumulator: any, item: any, key?: string, hash?: object): any
+interface MapCallback<T extends Hash<any>, K extends any> {
+  (
+    value: T[Extract<keyof T, string>],
+    key: Extract<keyof T, string>,
+    hash: T
+  ): K
 }
-
-export const hEach = (hash: object, func: callback): void => {
+interface FilterCallback<T extends Hash<any>> {
+  (
+    value: T[Extract<keyof T, string>],
+    key: Extract<keyof T, string>,
+    hash: T
+  ): boolean
+}
+interface ReduceCallback<T, K> {
+  (
+    accumulator: K,
+    value: T[Extract<keyof T, string>],
+    key: Extract<keyof T, string>,
+    hash: T
+  ): K
+}
+interface Hash<T> {
+  [key: string]: T
+}
+// type ValueType<T extends Hash<any>> = T extends { [key: string]: infer U }
+//   ? U
+//   : never
+type ValueTypeMapped<T extends Hash<any>, K> = { [p in keyof T]: K }
+// type Primitive = number | boolean | string | symbol
+/**
+ * 遍历对象,`return false`跳出
+ */
+export function hEach<T extends Hash<any>>(
+  hash: T,
+  func: EachCallback<T>
+): void {
   for (const key in hash) {
     if (hash.hasOwnProperty(key)) {
       if (func(hash[key], key, hash) === false) {
@@ -15,32 +49,42 @@ export const hEach = (hash: object, func: callback): void => {
   }
 }
 
-export const hMap = (h: object, func: callback): object => {
-  const temp = {}
-  hEach(h, (item, key, hash) => {
-    temp[key] = func(item, key, hash)
+/**
+ * 对对象进行值映射
+ */
+export function hMap<T, K>(
+  hash: T,
+  func: MapCallback<T, K>
+): ValueTypeMapped<T, K> {
+  const temp = {} as ValueTypeMapped<T, K>
+  hEach(hash, (value, key, h) => {
+    temp[key] = func(value, key, h)
   })
   return temp
 }
-
-export const hFilter = (h: object, func: callback): object => {
-  const temp = {}
-  hEach(h, (item, key, hash) => {
-    if (func(item, key, hash)) {
-      temp[key] = item
+/**
+ * 过滤对象,返回新的对象
+ */
+export function hFilter<T>(h: T, func: FilterCallback<T>): Partial<T> {
+  const temp = {} as Partial<T>
+  hEach(h, (value, key, hash) => {
+    if (func(value, key, hash)) {
+      temp[key] = value
     }
   })
   return temp
 }
-
-export const hReduce = (
-  h: object,
-  func: reduceCallback,
-  initialValue: any
-): any => {
+/**
+ * 对对象进行值的归并
+ */
+export function hReduce<T, K>(
+  hash: T,
+  func: ReduceCallback<T, K>,
+  initialValue: K
+): K {
   let accumulator = initialValue
-  hEach(h, (item, key, hash) => {
-    accumulator = func(accumulator, item, key, hash)
+  hEach(hash, (value, key, h) => {
+    accumulator = func(accumulator, value, key, h)
   })
   return accumulator
 }
