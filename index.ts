@@ -28,11 +28,7 @@ interface ReduceCallback<T, K> {
 interface Hash<T> {
   [key: string]: T
 }
-// type ValueType<T extends Hash<any>> = T extends { [key: string]: infer U }
-//   ? U
-//   : never
 type ValueTypeMapped<T extends Hash<any>, K> = { [p in keyof T]: K }
-// type Primitive = number | boolean | string | symbol
 /**
  * 遍历对象,`return false`跳出
  */
