@@ -1,23 +1,23 @@
-interface EachCallback<T extends Hash<any>> {
+interface EachCallback<T extends object> {
   (value: T[Extract<keyof T, string>], key: Extract<keyof T, string>, hash: T):
     | false
     | void
 }
-interface MapCallback<T extends Hash<any>, K extends any> {
+interface MapCallback<T extends object, K extends any> {
   (
     value: T[Extract<keyof T, string>],
     key: Extract<keyof T, string>,
     hash: T
   ): K
 }
-interface FilterCallback<T extends Hash<any>> {
+interface FilterCallback<T extends object> {
   (
     value: T[Extract<keyof T, string>],
     key: Extract<keyof T, string>,
     hash: T
   ): boolean
 }
-interface ReduceCallback<T, K> {
+interface ReduceCallback<T extends object, K> {
   (
     accumulator: K,
     value: T[Extract<keyof T, string>],
@@ -25,14 +25,11 @@ interface ReduceCallback<T, K> {
     hash: T
   ): K
 }
-interface Hash<T> {
-  [key: string]: T
-}
-type ValueTypeMapped<T extends Hash<any>, K> = { [p in keyof T]: K }
+type ValueTypeMapped<T extends object, K> = { [p in keyof T]: K }
 /**
- * 遍历对象,`return false`跳出
+ * 遍历对象,`return false`跳出,可以通过`hash[key]`的方式修改对象
  */
-export function hEach<T extends Hash<any>>(
+export function hEach<T extends object>(
   hash: T,
   func: EachCallback<T>
 ): void {
@@ -46,9 +43,9 @@ export function hEach<T extends Hash<any>>(
 }
 
 /**
- * 对对象进行值映射
+ * 对对象进行值映射,返回新的对象
  */
-export function hMap<T, K>(
+export function hMap<T extends object, K>(
   hash: T,
   func: MapCallback<T, K>
 ): ValueTypeMapped<T, K> {
@@ -61,7 +58,7 @@ export function hMap<T, K>(
 /**
  * 过滤对象,返回新的对象
  */
-export function hFilter<T>(h: T, func: FilterCallback<T>): Partial<T> {
+export function hFilter<T extends object>(h: T, func: FilterCallback<T>): Partial<T> {
   const temp = {} as Partial<T>
   hEach(h, (value, key, hash) => {
     if (func(value, key, hash)) {
@@ -73,7 +70,7 @@ export function hFilter<T>(h: T, func: FilterCallback<T>): Partial<T> {
 /**
  * 对对象进行值的归并
  */
-export function hReduce<T, K>(
+export function hReduce<T extends object, K>(
   hash: T,
   func: ReduceCallback<T, K>,
   initialValue: K
